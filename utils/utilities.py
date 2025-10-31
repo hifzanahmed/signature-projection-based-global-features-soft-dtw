@@ -16,9 +16,9 @@ class Utilities:
         else:
             #print("Signature Image loaded successfully.")
             # Show the image
-            cv2.imshow("Signature Image", signature)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+            #cv2.imshow("Signature Image", signature)
+            #cv2.waitKey(0)
+            #cv2.destroyAllWindows()
             return signature
         
     @staticmethod
@@ -64,12 +64,6 @@ class Utilities:
         processed_image_features = Utilities.horizontal_vertical_projection(cropped_img)
         #print("Horizontal and Vertical Projection:", processed_image_features.size)
         return processed_image_features
-    
-    @staticmethod
-    def extract_features_discrete_radon_transform(cropped_img):
-        processed_image_features = Utilities.horizontal_vertical_projection_discrete_radon_transform(cropped_img)
-        print("Horizontal and Vertical Projection:", processed_image_features.size)
-        return processed_image_features
 
     @staticmethod
     def horizontal_projection(binary_img):
@@ -112,19 +106,6 @@ class Utilities:
         return np.concatenate((horizontal_proj, vertical_proj))
     
     @staticmethod
-    def discrete_radon_transform(binary_img):
-        # 0° projection (horizontal features): sum along rows
-        horizontal_projection = np.sum(binary_img, axis=1)
-        # 90° projection (vertical features): sum along columns
-        vertical_projection = np.sum(binary_img, axis=0)
-        return horizontal_projection, vertical_projection
-    
-    @staticmethod
-    def horizontal_vertical_projection_discrete_radon_transform(binary_img):
-        horizontal_proj, vertical_proj = Utilities.discrete_radon_transform(binary_img)
-        return np.concatenate((horizontal_proj, vertical_proj))
-    
-    @staticmethod
     def compute_training_score(signatures):
         """
         Computes S1: average Soft-DTW distance between all pairs of genuine signatures.
@@ -142,11 +123,10 @@ class Utilities:
                 d = utils.soft_dtw(
                     signatures[i].reshape(-1, 1),
                     signatures[j].reshape(-1, 1),
-                    gamma=1.0
+                    gamma=0.1
                 )
                 dist_matrix[i, j] = dist_matrix[j, i] = d
 
-        print("Pairwise Soft-DTW distance matrix:\n", dist_matrix)
         # Average distance between all unique pairs (i < j)
         avg_distance = np.sum(np.triu(dist_matrix, k=1)) / (K * (K - 1) / 2)
         return avg_distance
@@ -162,13 +142,16 @@ class Utilities:
         Returns:
             float: Average Soft-DTW distance (S2 score).
         """
+        test_signature = test_signature.astype(np.float32)
+        test_signature = (test_signature - np.min(test_signature)) / (np.max(test_signature) - np.min(test_signature) + 1e-8)
+
         K = len(genuine_signatures)
         if K == 0:
             return 0.0  # Avoid division by zero
 
         utils = Utilities()
         total_dist = 0.0
-        gamma = 1.0
+        gamma = 0.1
 
         for i in range(K):
             dist = utils.soft_dtw(
@@ -182,10 +165,10 @@ class Utilities:
         return avg_dist
 
     @staticmethod
-    def soft_dtw(signature1, signature2, gamma=1.0):
-        print("Training on Genuine Signatures...")
+    def soft_dtw(signature1, signature2, gamma=0.1):
+        #print("Training on Genuine Signatures...")
         # Soft-DTW gamma parameter (controls smoothness)
         # Compute soft-DTW distance
         soft_dtw_distance = soft_dtw(signature1.reshape(-1, 1), signature2.reshape(-1, 1), gamma=gamma)
-        print("Soft-DTW distance:", soft_dtw_distance)
+        #print("Soft-DTW distance:", soft_dtw_distance)
         return soft_dtw_distance
