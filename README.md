@@ -6,3 +6,6 @@
 pip install opencv-python
 pip install numpy
 pip install tslearn
+
+Dataset: https://www.kaggle.com/datasets/matteocarnebella/cedar-signatures?resource=download
+
